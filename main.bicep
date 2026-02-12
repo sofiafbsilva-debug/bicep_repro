@@ -17,6 +17,15 @@ param tags object = {}
 @description('The name of the SQL Database')
 param databaseName string
 
+@description('The name of the secondary SQL Server')
+param secondarySqlServerName string
+
+@description('The Azure region for the secondary SQL Server')
+param secondaryLocation string
+
+@description('The name of the failover group')
+param failoverGroupName string
+
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: sqlServerName
   location: location
@@ -47,6 +56,41 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-05-01-preview' = {
   }
 }
 
+resource secondarySqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
+  name: secondarySqlServerName
+  location: secondaryLocation
+  tags: tags
+  properties: {
+    administratorLogin: administratorLogin
+    administratorLoginPassword: administratorLoginPassword
+    version: '12.0'
+    minimalTlsVersion: '1.2'
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource failoverGroup 'Microsoft.Sql/servers/failoverGroups@2023-05-01-preview' = {
+  parent: sqlServer
+  name: failoverGroupName
+  properties: {
+    readWriteEndpoint: {
+      failoverPolicy: 'Automatic'
+      failoverWithDataLossGracePeriodMinutes: 60
+    }
+    readOnlyEndpoint: {
+      failoverPolicy: 'Disabled'
+    }
+    partnerServers: [
+      {
+        id: secondarySqlServer.id
+      }
+    ]
+    databases: [
+      sqlDatabase.id
+    ]
+  }
+}
+
 @description('The fully qualified domain name of the SQL Server')
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 
@@ -55,3 +99,9 @@ output sqlServerId string = sqlServer.id
 
 @description('The resource ID of the SQL Database')
 output sqlDatabaseId string = sqlDatabase.id
+
+@description('The resource ID of the secondary SQL Server')
+output secondarySqlServerId string = secondarySqlServer.id
+
+@description('The resource ID of the failover group')
+output failoverGroupId string = failoverGroup.id
