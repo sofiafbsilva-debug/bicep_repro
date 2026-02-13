@@ -11,5 +11,5 @@
       ]
     }
   },
-  "postCreateCommand": "az bicep install"
+  "postCreateCommand": "az bicep install --version 0.24.24"
 }
