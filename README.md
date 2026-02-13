@@ -21,8 +21,8 @@ This repository contains a Bicep template for deploying an Azure SQL Server with
 | Parameter | Required | Description |
 |-----------|----------|-------------|
 | `sqlServerName` | Yes | The name of the primary SQL Server (must be globally unique) |
-| `administratorLogin` | Yes | The administrator username for the SQL Servers |
-| `administratorLoginPassword` | Yes | The administrator password (secure) |
+| `aadAdminLogin` | Yes | The Azure AD admin login name (e.g., user@domain.com or group name) |
+| `aadAdminObjectId` | Yes | The Azure AD admin object ID (GUID) |
 | `databaseName` | Yes | The name of the SQL Database |
 | `secondarySqlServerName` | Yes | The name of the secondary SQL Server (must be globally unique) |
 | `secondaryLocation` | Yes | Azure region for the secondary SQL Server |
@@ -57,8 +57,8 @@ az deployment group create \
   --resource-group <resource-group-name> \
   --template-file main.bicep \
   --parameters sqlServerName=<unique-server-name> \
-               administratorLogin=<admin-username> \
-               administratorLoginPassword=<secure-password> \
+               aadAdminLogin=<aad-admin-login> \
+               aadAdminObjectId=<aad-admin-object-id> \
                databaseName=<database-name> \
                secondarySqlServerName=<secondary-server-name> \
                secondaryLocation=<secondary-region> \
@@ -72,11 +72,11 @@ az deployment group create \
   --resource-group my-rg \
   --template-file main.bicep \
   --parameters sqlServerName=mysqlserver-primary \
-               administratorLogin=sqladmin \
-               administratorLoginPassword='P@ssw0rd123!' \
+               aadAdminLogin=user@domain.com \
+               aadAdminObjectId=00000000-0000-0000-0000-000000000000 \
                databaseName=mydb \
                secondarySqlServerName=mysqlserver-secondary \
-               secondaryLocation=westus \
+               secondaryLocation=northeurope \
                failoverGroupName=myfailovergroup
 ```
 
@@ -93,7 +93,8 @@ After successful deployment, the following outputs are available:
 ## Security Features
 
 - Minimum TLS version set to 1.2
-- Password parameter marked as secure (not logged in deployment history)
+- Azure AD-only authentication enabled (no SQL authentication)
+- Azure AD admin configured as the server administrator
 
 ## High Availability
 
